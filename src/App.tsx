@@ -10,6 +10,7 @@ import Canvas from './components/Canvas';
 import Dialogs, { type ModalType } from './components/Dialogs';
 
 type DragItem = { kind: 'new'; type: BlockType } | { kind: 'move'; id: string };
+type ResizeItem = { id: string; handle: string; startX: number; startY: number; startW: number; startH: number } | null;
 
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -22,6 +23,7 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [modal, setModal] = useState<ModalType>(null);
   const [dragItem, setDragItem] = useState<DragItem | null>(null);
+  const [resizeItem, setResizeItem] = useState<ResizeItem>(null);
   const [toast, setToast] = useState('');
   const [panelOpen, setPanelOpen] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
@@ -48,63 +50,26 @@ export default function App() {
     setPanelOpen(false);
   };
 
-  const addBlock = (type: BlockType, insertion?: number) => {
-    if (project.blocks.length >= 100) { notify('Seu site já tem muitas peças! Você pode começar outro.'); return; }
+  const addBlock = (type: BlockType) => {
+    if (project.blocks.length >= 100) { notify('Seu site já tem muitas peças!'); return; }
+    const x = 50 + (project.blocks.length * 20) % 200;
+    const y = 50 + (project.blocks.length * 20) % 200;
     const block = createKidBlock(type);
-    change((current) => {
-      if (selectedId) {
-        const selectedBlock = current.blocks.find((b) => b.id === selectedId);
-        if (selectedBlock?.type === 'container' && selectedBlock.children) {
-          const maxChildren = selectedBlock.style.layout === 'grid-3' ? 3 : 2;
-          if (selectedBlock.children.length >= maxChildren) {
-            notify(`Esta linha já tem ${maxChildren} peças. Escolha outra ou mude para 3 colunas.`);
-            return current;
-          }
-          const newChildren = [...selectedBlock.children, block.id];
-          return {
-            ...current,
-            blocks: current.blocks.map((b) => b.id === selectedId ? { ...b, children: newChildren } : b),
-          };
-        }
-      }
-      const blocks = [...current.blocks];
-      const selected = blocks.findIndex((item) => item.id === selectedId);
-      blocks.splice(insertion ?? (selected >= 0 ? selected + 1 : blocks.length), 0, block);
-      return { ...current, blocks };
-    });
+    block.position = { x, y, width: block.position.width, height: block.position.height };
+    change((current) => ({ ...current, blocks: [...current.blocks, block] }));
     selectBlock(block.id);
   };
 
-  const updateBlock = useCallback((id: string, update: Partial<Pick<Block, 'content' | 'style'>>) => {
+  const updateBlock = useCallback((id: string, update: Partial<Pick<Block, 'content' | 'style' | 'position'>>) => {
     change((current) => ({ ...current, blocks: current.blocks.map((block) => block.id === id ? { ...block, ...update } : block) }));
   }, [change]);
 
   const deleteBlock = useCallback((id: string) => {
-    change((current) => {
-      // Remove from any container's children
-      const blocks = current.blocks.map((block) => {
-        if (block.children && block.children.includes(id)) {
-          return { ...block, children: block.children.filter((childId) => childId !== id) };
-        }
-        return block;
-      });
-      return { ...current, blocks: blocks.filter((block) => block.id !== id) };
-    });
+    change((current) => ({ ...current, blocks: current.blocks.filter((block) => block.id !== id) }));
     setSelectedId(null);
     setPanelOpen(false);
     notify('Peça apagada. Foi sem querer? Clique em Desfazer.');
   }, [change, notify]);
-
-  const moveBlock = useCallback((id: string, direction: number) => {
-    change((current) => {
-      const index = current.blocks.findIndex((block) => block.id === id);
-      if (index < 0 || index + direction < 0 || index + direction >= current.blocks.length) return current;
-      const blocks = [...current.blocks];
-      const [block] = blocks.splice(index, 1);
-      blocks.splice(index + direction, 0, block);
-      return { ...current, blocks };
-    });
-  }, [change]);
 
   const duplicateBlock = (id: string) => {
     if (project.blocks.length >= 100) { notify('Seu site já tem muitas peças!'); return; }
@@ -113,33 +78,53 @@ export default function App() {
       const index = current.blocks.findIndex((block) => block.id === id);
       if (index < 0) return current;
       const blocks = [...current.blocks];
-      blocks.splice(index + 1, 0, { ...structuredClone(blocks[index]), id: newId });
+      const cloned = { ...structuredClone(blocks[index]), id: newId, position: { ...blocks[index].position, x: blocks[index].position.x + 20, y: blocks[index].position.y + 20 } };
+      blocks.splice(index + 1, 0, cloned);
       return { ...current, blocks };
     });
     selectBlock(newId);
-    notify('Agora você tem uma cópia!');
+    notify('Cópia criada!');
   };
 
-  const dropBlock = (index: number) => {
-    if (!dragItem) return;
-    if (dragItem.kind === 'new') addBlock(dragItem.type, index);
-    else {
-      change((current) => {
-        const from = current.blocks.findIndex((block) => block.id === dragItem.id);
-        if (from < 0) return current;
-        const blocks = [...current.blocks];
-        const [block] = blocks.splice(from, 1);
-        blocks.splice(index > from ? index - 1 : index, 0, block);
-        return { ...current, blocks };
-      });
-      selectBlock(dragItem.id);
-    }
-    setDragItem(null);
+  const startDrag = (id: string) => {
+    setDragItem({ kind: 'move', id });
   };
+
+  const moveDrag = (id: string, dx: number, dy: number) => {
+    if (!dragItem || dragItem.kind !== 'move' || dragItem.id !== id) return;
+    change((current) => ({
+      ...current,
+      blocks: current.blocks.map((block) => block.id === id ? { ...block, position: { ...block.position, x: Math.max(0, block.position.x + dx), y: Math.max(0, block.position.y + dy) } } : block),
+    }));
+  };
+
+  const endDrag = () => setDragItem(null);
+
+  const startResize = (id: string, handle: string) => {
+    const block = project.blocks.find((b) => b.id === id);
+    if (!block) return;
+    setResizeItem({ id, handle, startX: block.position.x, startY: block.position.y, startW: block.position.width, startH: block.position.height });
+  };
+
+  const moveResize = (id: string, handle: string, dx: number, dy: number) => {
+    if (!resizeItem || resizeItem.id !== id) return;
+    const { startX, startY, startW, startH } = resizeItem;
+    let x = startX, y = startY, w = startW, h = startH;
+    if (handle.includes('w')) { x = startX + dx; w = Math.max(60, startW - dx); }
+    if (handle.includes('e')) { w = Math.max(60, startW + dx); }
+    if (handle.includes('n')) { y = startY + dy; h = Math.max(40, startH - dy); }
+    if (handle.includes('s')) { h = Math.max(40, startH + dy); }
+    change((current) => ({
+      ...current,
+      blocks: current.blocks.map((block) => block.id === id ? { ...block, position: { x: Math.max(0, x), y: Math.max(0, y), width: w, height: h } } : block),
+    }));
+  };
+
+  const endResize = () => setResizeItem(null);
 
   const downloadProject = useCallback(() => {
     downloadBlob(new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' }), `${projectSlug(project.name)}.atelie.json`);
-    notify('Trabalho baixado! Use “Abrir trabalho” para continuar depois.');
+    notify('Trabalho baixado! Use "Abrir trabalho" para continuar depois.');
   }, [project, notify]);
 
   useEffect(() => {
@@ -165,7 +150,7 @@ export default function App() {
   return <div className={`app-shell kid-app ${panelOpen ? 'kid-panel-open' : ''}`}>
     <header className="kid-header">
       <div className="brand"><span className="brand-symbol"><Sparkles size={25} /></span><span>ateliê<span className="brand-period">.</span></span></div>
-      <label className="kid-project-name"><span>Meu site se chama</span><input aria-label="Nome do meu site" value={project.name} maxLength={100} onChange={(event) => change((current) => ({ ...current, name: event.target.value }))} /></label>
+      <label className="kid-project-name"><span>Meu site se chama</span><input aria-label="Nome do meu site" value={project.name} maxLength={100} onChange={(e) => change((current) => ({ ...current, name: e.target.value }))} /></label>
       <div className="kid-header-actions">
         <button className="kid-button kid-undo" disabled={!canUndo} onClick={undo} title="Desfazer (Ctrl+Z)"><Undo2 size={20} /><span>Desfazer</span></button>
         {canRedo && <button className="kid-button kid-redo" onClick={redo} title="Refazer"><Redo2 size={20} /><span>Refazer</span></button>}
@@ -178,7 +163,7 @@ export default function App() {
       <button className="kid-mobile-pieces kid-button" onClick={openBlocks}><Plus size={20} />Peças</button>
       <div className="kid-steps" aria-label="Como criar seu site">
         <span className={!selectedBlock ? 'current' : ''}><b>1</b>Escolha uma peça</span><i>→</i>
-        <span className={selectedBlock ? 'current' : ''}><b>2</b>Deixe do seu jeito</span><i>→</i>
+        <span className={selectedBlock ? 'current' : ''}><b>2</b>Arraste e redimensione</span><i>→</i>
         <span><b>3</b>Veja seu site!</span>
       </div>
       <span className={`kid-save-status ${saveStatus === 'error' ? 'error' : ''}`} role="status"><Check size={16} />{saveStatus === 'saving' ? 'Guardando...' : saveStatus === 'error' ? 'Clique em Guardar para salvar' : 'Salvo neste navegador'}</span>
@@ -188,12 +173,12 @@ export default function App() {
       {panelOpen && <button className="kid-panel-shade" aria-label="Voltar ao site" onClick={() => setPanelOpen(false)} />}
       <aside className="kid-panel" ref={panelRef} aria-label={selectedBlock ? 'Mudar minha peça' : 'Escolher peças'}>
         <button className="kid-panel-close kid-button" onClick={() => setPanelOpen(false)}><X size={18} />Fechar</button>
-        {selectedBlock ? <Inspector key={selectedBlock.id} block={selectedBlock} blocks={project.blocks} onUpdate={updateBlock} onMove={moveBlock} onDuplicate={duplicateBlock} onDelete={deleteBlock} onDone={done} onToast={notify} /> : <>
+        {selectedBlock ? <Inspector key={selectedBlock.id} block={selectedBlock} blocks={project.blocks} onUpdate={updateBlock} onMove={moveDrag} onDuplicate={duplicateBlock} onDelete={deleteBlock} onDone={done} onToast={notify} /> : <>
           <Sidebar theme={project.theme} onAdd={addBlock} onDragNew={(type) => setDragItem({ kind: 'new', type })} onDragEnd={() => setDragItem(null)} onTheme={(theme) => change((current) => ({ ...current, theme: { ...current.theme, ...theme } }))} onHelp={() => setModal('help')} onTeacher={() => setModal('teacher')} />
           <div className="kid-file-actions"><button onClick={() => setModal('new')}><Plus size={17} />Começar outro</button><button onClick={openImport}><FolderOpen size={17} />Abrir trabalho</button></div>
         </>}
       </aside>
-      <Canvas project={project} selectedId={selectedId} dragging={!!dragItem} onSelect={selectBlock} onDragMove={(id) => setDragItem({ kind: 'move', id })} onDragEnd={() => setDragItem(null)} onDrop={dropBlock} onMove={moveBlock} onEditText={(id, key, value) => change((current) => ({ ...current, blocks: current.blocks.map((block) => block.id === id ? { ...block, content: { ...block.content, [key]: value } } : block) }))} onAdd={openBlocks} />
+      <Canvas project={project} selectedId={selectedId} device="desktop" dragging={!!dragItem} resizing={!!resizeItem} onSelect={selectBlock} onDragStart={startDrag} onDragMove={moveDrag} onDragEnd={endDrag} onResizeStart={startResize} onResizeMove={moveResize} onResizeEnd={endResize} onDelete={deleteBlock} onEditText={(id, key, value) => change((current) => ({ ...current, blocks: current.blocks.map((block) => block.id === id ? { ...block, content: { ...block.content, [key]: value } } : block) }))} onAdd={openBlocks} />
     </div>
 
     <input ref={importRef} className="sr-only" tabIndex={-1} type="file" accept=".json,application/json" aria-label="Importar projeto" onChange={async (event) => {

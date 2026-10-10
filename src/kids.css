@@ -43,6 +43,7 @@
 .kid-peach { background: #fff0e5; color: #b97943; }
 .kid-green { background: #edf5e9; color: #658b49; }
 .kid-mint { background: #e8faf0; color: #3a9c6d; }
+.kid-gray { background: #f0f0f0; color: #6b6b6b; }
 .kid-card-icon { display: flex; align-items: center; justify-content: center; height: 43px; width: 43px; border-radius: 11px; background: #ffffff85; margin-bottom: 7px; }
 .kid-add-card strong { font-size: 17px; font-weight: 700; }
 .kid-add-card > span:last-of-type { font-size: 11px; font-weight: 500; line-height: 1.5; }
@@ -92,6 +93,21 @@
 .kid-layouts button.chosen svg { color: #7c5aa0; }
 .kid-done { width: 100%; color: #fff; background: #739560; border-color: #739560; min-height: 51px; font-size: 17px; }
 .kid-done:hover:not(:disabled) { color: #fff; background: #60804e; border-color: #60804e; }
+.kid-size { padding: 0; border: 0; margin: 21px 0 24px; }
+.kid-size legend { padding: 0; font-size: 13px; font-weight: 600; color: #786187; margin-bottom: 12px; }
+.kid-size-row { display: flex; align-items: center; gap: 10px; }
+.kid-size-row .kid-field { flex: 1; margin-bottom: 0; }
+.kid-size-row input[type="range"] { flex: 1; accent-color: #7055bb; }
+.kid-weight { padding: 0; border: 0; margin: 21px 0 24px; }
+.kid-weight legend { padding: 0; font-size: 13px; font-weight: 600; color: #786187; margin-bottom: 12px; }
+.kid-weight-row { display: flex; gap: 8px; }
+.kid-weight-row button { flex: 1; padding: 10px; border: 1.5px solid #e7dfee; border-radius: 10px; background: #fff; color: #8a6ca8; font-size: 13px; font-weight: 600; }
+.kid-weight-row button.chosen { border-color: #9c7bbb; background: #f5eefa; color: #7c5aa0; box-shadow: 0 0 0 2px #ece3f4; }
+.kid-position { padding: 0; border: 0; margin: 21px 0 24px; }
+.kid-position legend { padding: 0; font-size: 13px; font-weight: 600; color: #786187; margin-bottom: 12px; }
+.kid-pos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.kid-position .kid-field { margin-bottom: 0; }
+.kid-position .kid-field input { padding: 10px; font-size: 14px; }
 .kid-organize { margin-top: 24px; }
 .kid-organize > .kid-button { width: 100%; margin-top: 9px; font-size: 13px; }
 .kid-move-buttons { display: flex; gap: 8px; }

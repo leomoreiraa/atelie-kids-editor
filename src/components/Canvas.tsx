@@ -1,34 +1,56 @@
-import { memo, useEffect, useRef, useState, type CSSProperties, type DragEvent } from 'react';
-import { ArrowDown, ArrowUp, GripVertical, Pencil, Plus, Sparkles } from 'lucide-react';
+import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from 'react';
+import { Move, Plus, Trash2 } from 'lucide-react';
+
+const ResizeHandles = ({ blockId, onResizeStart }: { blockId: string; onResizeStart: (id: string, handle: string) => void }) => (
+  <div style={{ display: 'contents' }}>
+    {['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].map((h) => (
+      <ResizeHandle key={h} handle={h} onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onResizeStart(blockId, h); }} />
+    ))}
+  </div>
+);
 import { type Block, type Project } from '../model';
-import { partName } from '../kids';
 import { renderBlock, siteCss, themeVariables } from '../site';
 
-export type Device = 'desktop' | 'tablet' | 'mobile';
-export const deviceWidths = { desktop: 1120, tablet: 768, mobile: 390 };
+export type Device = 'desktop' | 'mobile';
+export const deviceWidths = { desktop: 1200, mobile: 390 };
 
 interface CanvasProps {
   project: Project;
   selectedId: string | null;
+  device: Device;
   dragging: boolean;
+  resizing: boolean;
   onSelect: (id: string | null) => void;
-  onDragMove: (id: string) => void;
+  onDragStart: (id: string) => void;
+  onDragMove: (id: string, dx: number, dy: number) => void;
   onDragEnd: () => void;
-  onDrop: (index: number) => void;
-  onMove: (id: string, direction: number) => void;
+  onResizeStart: (id: string, handle: string) => void;
+  onResizeMove: (id: string, handle: string, dx: number, dy: number) => void;
+  onResizeEnd: () => void;
+  onDelete: (id: string) => void;
   onEditText: (id: string, key: string, value: string) => void;
   onAdd: () => void;
 }
 
-const BlockMarkup = memo(function BlockMarkup({ block }: { block: Block }) {
-  return <div className="block-markup" dangerouslySetInnerHTML={{ __html: renderBlock(block, true) }} />;
-});
+const BlockContent = ({ block, editing }: { block: Block; editing: boolean }) => {
+  return <div className="block-content" dangerouslySetInnerHTML={{ __html: renderBlock(block, editing).replace(/^<[^>]+>|<\/[^>]+>$/g, '') }} />;
+};
+
+const ResizeHandle = ({ handle, onMouseDown }: { handle: string; onMouseDown: (e: MouseEvent) => void }) => {
+  const pos: Record<string, CSSProperties> = {
+    'nw': { top: -4, left: -4 }, 'ne': { top: -4, right: -4 },
+    'sw': { bottom: -4, left: -4 }, 'se': { bottom: -4, right: -4 },
+    'n': { top: -4, left: '50%', transform: 'translateX(-50%)' },
+    's': { bottom: -4, left: '50%', transform: 'translateX(-50%)' },
+    'e': { right: -4, top: '50%', transform: 'translateY(-50%)' },
+    'w': { left: -4, top: '50%', transform: 'translateY(-50%)' },
+  };
+  return <div className="resize-handle" style={pos[handle]} onMouseDown={onMouseDown} aria-label={`Redimensionar ${handle}`} role="slider" tabIndex={0} />;
+};
 
 export default function Canvas(props: CanvasProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [availableWidth, setAvailableWidth] = useState(1000);
-  const [insertionIndex, setInsertionIndex] = useState<number | null>(null);
-  const pageWidth = Math.min(1000, Math.max(280, availableWidth - (availableWidth < 600 ? 24 : 64)));
 
   useEffect(() => {
     const element = scrollRef.current;
@@ -38,90 +60,82 @@ export default function Canvas(props: CanvasProps) {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => { if (!props.dragging) setInsertionIndex(null); }, [props.dragging]);
+  const scale = Math.min(1, Math.max(0.3, (availableWidth - 80) / deviceWidths[props.device]));
 
-  useEffect(() => {
-    if (!props.selectedId) return;
-    const selected = document.querySelector(`[data-canvas-block="${props.selectedId}"]`);
-    const scroll = scrollRef.current;
-    if (selected && scroll) {
-      const rect = selected.getBoundingClientRect();
-      const outer = scroll.getBoundingClientRect();
-      if (rect.top < outer.top || rect.top > outer.bottom - 60) selected.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    }
-  }, [props.selectedId]);
-
-  const findIndex = (event: DragEvent) => {
-    const wrapper = (event.target as HTMLElement).closest<HTMLElement>('[data-canvas-block]');
-    if (!wrapper) return props.project.blocks.length;
-    const rect = wrapper.getBoundingClientRect();
-    return Number(wrapper.dataset.index) + (event.clientY >= rect.top + rect.height / 2 ? 1 : 0);
-  };
-
-  return <main className="canvas-area kid-canvas">
-    <div className="canvas-topline"><span><Sparkles size={18} />Seu site está ficando assim!</span><span>Clique em uma parte para mudar.</span></div>
-    <div className="canvas-scroll" ref={scrollRef} onClick={(event) => { if (event.target === event.currentTarget) props.onSelect(null); }}>
-      <div className={`canvas-frame ${props.dragging ? 'drag-active' : ''}`} style={{ width: pageWidth }}>
-        <div className="canvas-browser"><div className="browser-dots"><i /><i /><i /></div><div className="browser-address">{props.project.name || 'Meu site'}</div><span className="browser-sparkle">✧</span></div>
-        <style>{siteCss}</style>
-        <div className="site-page editor-page" style={themeVariables(props.project) as CSSProperties}
-          onDragOver={(event) => { if (!props.dragging) return; event.preventDefault(); setInsertionIndex(findIndex(event)); }}
-          onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setInsertionIndex(null); }}
-          onDrop={(event) => { event.preventDefault(); if (props.dragging) props.onDrop(insertionIndex ?? findIndex(event)); setInsertionIndex(null); }}>
-          {props.project.blocks.map((block, index) => <div key={block.id} data-canvas-block={block.id} data-index={index} className={`editor-block ${props.selectedId === block.id ? 'is-selected' : ''} ${props.dragging && insertionIndex === index ? 'insert-before' : ''} ${block.type === 'spacer' ? 'editor-spacer' : ''}`} role="group" aria-label={`Peça ${partName(block.type)}`} tabIndex={0}
-            onClick={(event) => {
-              if ((event.target as HTMLElement).closest('a')) event.preventDefault();
-              if (!(event.target as HTMLElement).closest('.editor-block-tools')) props.onSelect(block.id);
-            }}
-            onKeyDown={(event) => {
-              const target = event.target as HTMLElement;
-              if (target.isContentEditable) {
-                event.stopPropagation();
-                if (event.key === 'Escape') { target.innerText = block.content[target.dataset.field!] || ''; target.blur(); }
-                if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); target.blur(); }
-              } else if (event.key === 'Enter' && target === event.currentTarget) { props.onSelect(block.id); }
-            }}
-            onDoubleClick={(event) => {
-              const target = (event.target as HTMLElement).closest<HTMLElement>('[data-field]');
-              if (!target) return;
-              event.preventDefault();
-              target.contentEditable = 'true';
-              target.focus();
-              const range = document.createRange();
-              range.selectNodeContents(target);
-              window.getSelection()?.removeAllRanges();
-              window.getSelection()?.addRange(range);
-            }}
-            onPaste={(event) => {
-              const target = event.target as HTMLElement;
-              if (!target.isContentEditable) return;
-              event.preventDefault();
-              const selection = window.getSelection();
-              if (!selection?.rangeCount) return;
-              const range = selection.getRangeAt(0);
-              range.deleteContents();
-              const text = document.createTextNode(event.clipboardData.getData('text/plain'));
-              range.insertNode(text);
-              range.setStartAfter(text);
-              range.collapse(true);
-              selection.removeAllRanges();
-              selection.addRange(range);
-            }}
-            onBlur={(event) => {
-              const target = event.target as HTMLElement;
-              if (target.contentEditable !== 'true' || !target.dataset.field) return;
-              target.contentEditable = 'false';
-              props.onEditText(block.id, target.dataset.field, target.innerText);
-            }}>
-            <BlockMarkup block={block} />
-            {props.selectedId === block.id && <div className="editor-block-tools" onClick={(e) => e.stopPropagation()}><button draggable title="Arraste para mover" aria-label="Arrastar peça" onDragStart={(event) => { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', block.id); props.onDragMove(block.id); }} onDragEnd={props.onDragEnd}><GripVertical size={20} /></button><span>{partName(block.type)}</span><button disabled={!index} aria-label="Subir peça" onClick={() => props.onMove(block.id, -1)}><ArrowUp size={18} /><span>Subir</span></button><button disabled={index === props.project.blocks.length - 1} aria-label="Descer peça" onClick={() => props.onMove(block.id, 1)}><ArrowDown size={18} /><span>Descer</span></button></div>}
-            <span className="block-hover-label"><Pencil size={15} />Clique para mudar</span>
-          </div>)}
-          {!props.project.blocks.length && <div className="empty-canvas"><span><Sparkles size={40} /></span><h2>O que você vai inventar?</h2><p>Escolha uma peça para começar!</p><button className="kid-button kid-primary" onClick={props.onAdd}><Plus size={21} />Escolher uma peça</button></div>}
-          <div className={`canvas-add-block ${props.dragging && insertionIndex === props.project.blocks.length ? 'insert-before' : ''}`}><button onClick={props.onAdd}><Plus size={22} />Colocar mais uma peça</button></div>
-        </div>
+  return (
+    <main className="canvas-area">
+      <div className="canvas-topline">
+        <span><span className="canvas-page-dot" />Página</span>
+        <span>{props.device === 'desktop' ? 'Computador' : 'Celular'} · {deviceWidths[props.device]}px</span>
       </div>
-      <div className="canvas-bottom-note"><Sparkles size={17} />Sua imaginação tem lugar aqui.</div>
-    </div>
-  </main>;
+      <div className="canvas-scroll" ref={scrollRef} onClick={(e) => { if (e.target === e.currentTarget) props.onSelect(null); }}>
+        <div className={`canvas-frame canvas-${props.device} ${props.dragging ? 'drag-active' : ''} ${props.resizing ? 'resize-active' : ''}`} style={{ width: deviceWidths[props.device], zoom: scale } as CSSProperties}>
+          <div className="canvas-browser"><div className="browser-dots"><i /><i /><i /></div><div className="browser-address">{props.project.name || 'Meu site'}</div></div>
+          <style>{siteCss}</style>
+          <div className="site-page editor-page" style={themeVariables(props.project) as CSSProperties}>
+            {props.project.blocks.map((block) => {
+              const isSelected = props.selectedId === block.id;
+              return (
+                <div
+                  key={block.id}
+                  data-canvas-block={block.id}
+                  className={`editor-block ${isSelected ? 'is-selected' : ''}`}
+                  style={{
+                    left: block.position.x,
+                    top: block.position.y,
+                    width: block.position.width,
+                    height: block.position.height,
+                    position: 'absolute',
+                  }}
+                  role="group"
+                  aria-label={`Peça ${block.type}`}
+                  tabIndex={0}
+                  onClick={(e) => {
+                    if ((e.target as HTMLElement).closest('.editor-block-tools, .resize-handle')) return;
+                    props.onSelect(block.id);
+                  }}
+                  onDoubleClick={(e) => {
+                    const target = (e.target as HTMLElement).closest('[data-field]') as HTMLElement | null;
+                    if (!target) return;
+                    e.preventDefault();
+                    target.contentEditable = 'true';
+                    target.focus();
+                  }}
+                  onBlur={(e) => {
+                    const target = e.target as HTMLElement;
+                    if (target.contentEditable !== 'true' || !target.dataset.field) return;
+                    target.contentEditable = 'false';
+                    props.onEditText(block.id, target.dataset.field, target.innerText);
+                  }}
+                >
+                  <BlockContent block={block} editing={isSelected} />
+                  {isSelected && (
+                      <>
+                        <div className="editor-block-tools" onClick={(e) => e.stopPropagation()}>
+                          <button draggable onMouseDown={(e) => { e.preventDefault(); props.onDragStart(block.id); }} onMouseMove={(e) => { if (e.buttons === 1) props.onDragMove(block.id, e.movementX, e.movementY); }} onMouseUp={props.onDragEnd} onMouseLeave={props.onDragEnd} title="Mover"><Move size={18} /></button>
+                          <span>{block.type}</span>
+                          <button onClick={() => props.onDelete(block.id)} title="Apagar"><Trash2 size={16} /></button>
+                        </div>
+                        <ResizeHandles blockId={block.id} onResizeStart={props.onResizeStart} />
+                      </>
+                    )}
+                </div>
+              );
+            })}
+            {!props.project.blocks.length && (
+              <div className="empty-canvas">
+                <span><Plus size={40} /></span>
+                <h2>Sua página está vazia</h2>
+                <p>Clique em "Adicionar" para começar</p>
+                <button className="kid-button kid-primary" onClick={props.onAdd}><Plus size={21} />Adicionar primeira peça</button>
+              </div>
+            )}
+            <div className="canvas-add-block"><button onClick={props.onAdd}><Plus size={22} />Adicionar peça</button></div>
+          </div>
+        </div>
+        <div className="canvas-bottom-note">Posicione e redimensione livremente</div>
+      </div>
+      <div className="canvas-status"><span>Arraste para mover · Puxe as bordas para redimensionar</span></div>
+    </main>
+  );
 }

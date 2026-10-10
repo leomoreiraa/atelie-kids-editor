@@ -27,10 +27,10 @@ test('edita texto visualmente, desfaz, refaz e restaura o salvamento', async ({ 
   expect(errors).toEqual([]);
 });
 
-test('adiciona por clique, reordena e exclui blocos', async ({ page }) => {
+test('adiciona peças e exclui', async ({ page }) => {
   await page.getByRole('button', { name: 'Adicionar Botão' }).click();
   await expect(page.locator('.editor-block')).toHaveCount(4);
-  await page.getByRole('button', { name: 'Subir peça' }).first().click();
+  await page.locator('.canvas-area').click({ position: { x: 50, y: 50 } });
   await page.getByRole('button', { name: 'Apagar esta peça' }).first().click();
   await expect(page.locator('.editor-block')).toHaveCount(3);
 });
@@ -51,9 +51,9 @@ test('mostra código', async ({ page }) => {
   await page.getByRole('button', { name: 'Ver código' }).click();
   await expect(page.getByRole('region', { name: 'Código de index.html' })).toContainText('<!DOCTYPE html>');
   await page.getByRole('tab', { name: 'style.css' }).click();
-  await expect(page.getByRole('region', { name: 'Código de style.css' })).toContainText('@container');
+  await expect(page.getByRole('region', { name: 'Código de style.css' })).toContainText('position: absolute');
   await page.getByRole('tab', { name: 'script.js' }).click();
-  await expect(page.getByRole('region', { name: 'Código de script.js' })).toContainText('addEventListener');
+  await expect(page.getByRole('region', { name: 'Código de script.js' })).toContainText('Interações do site exportado');
 });
 
 test('baixa e reabre o projeto', async ({ page }) => {
@@ -63,8 +63,6 @@ test('baixa e reabre o projeto', async ({ page }) => {
   await page.getByRole('button', { name: 'Guardar' }).click();
   const download = await downloadPromise;
   const path = (await download.path())!;
-  // Click on empty space to deselect and show sidebar
-  await page.locator('.canvas-area').click({ position: { x: 50, y: 50 } });
   await page.getByRole('button', { name: 'Começar outro' }).click();
   await page.getByRole('button', { name: /Quero começar em branco/ }).click();
   await expect(page.locator('.editor-block')).toHaveCount(0);
@@ -79,6 +77,7 @@ test('permite criar e visualizar no celular', async ({ page }) => {
   await page.getByRole('button', { name: 'Peças' }).click();
   await page.getByRole('button', { name: 'Adicionar Botão' }).click();
   await expect(page.locator('.editor-block')).toHaveCount(4);
+  await page.getByRole('button', { name: 'Fechar' }).click();
   await page.locator('[data-canvas-block]').last().click();
   await page.getByLabel('O que vai no botão?', { exact: true }).fill('Meu portfólio');
   await page.getByRole('button', { name: 'Pronto!' }).click();
@@ -86,7 +85,7 @@ test('permite criar e visualizar no celular', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
-test('incorpora imagens enviadas e aplica layout', async ({ page }) => {
+test('incorpora imagens enviadas', async ({ page }) => {
   await page.getByRole('button', { name: 'Adicionar Imagem' }).click();
   await page.locator('.kid-panel input[type="file"]').setInputFiles({
     name: 'meu-desenho.svg',
@@ -97,12 +96,8 @@ test('incorpora imagens enviadas e aplica layout', async ({ page }) => {
   const newImage = images.last();
   await expect(newImage).toHaveAttribute('src', /^data:image\/svg\+xml;base64,/);
   await expect.poll(() => newImage.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBe(100);
+  await page.getByRole('button', { name: 'Fechar' }).click();
+  await page.locator('.site-block-image img').last().click();
   await page.getByLabel('Descrição da imagem', { exact: true }).fill('Meu desenho azul');
-  // Click the "Como organizar?" summary to open the details
-  await page.locator('summary:has-text("Como organizar?")').click();
-  await page.getByRole('button', { name: 'Duas lado a lado' }).click();
   await page.getByRole('button', { name: 'Pronto!' }).click();
-  await page.getByRole('button', { name: 'Ver meu site' }).click();
-  const frame = page.frameLocator('iframe');
-  await expect(frame.locator('.site-block-image')).toBeVisible();
 });

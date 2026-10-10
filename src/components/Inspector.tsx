@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { ArrowDown, ArrowLeft, ArrowUp, Check, Copy, Grid, ImagePlus, LayoutGrid, LayoutList, Trash2 } from 'lucide-react';
+import { ArrowLeft, Check, Copy, ImagePlus, Minus, Plus, Trash2 } from 'lucide-react';
 import { definitionFor, type Block, type Field } from '../model';
 import { partName, partTitle, pictures } from '../kids';
 import BlockIcon from './BlockIcon';
@@ -7,8 +7,8 @@ import BlockIcon from './BlockIcon';
 interface Props {
   block: Block;
   blocks: Block[];
-  onUpdate: (id: string, update: Partial<Pick<Block, 'content' | 'style'>>) => void;
-  onMove: (id: string, direction: number) => void;
+  onUpdate: (id: string, update: Partial<Pick<Block, 'content' | 'style' | 'position'>>) => void;
+  onMove: (id: string, dx: number, dy: number) => void;
   onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
   onDone: () => void;
@@ -44,23 +44,13 @@ const colorChoices = [
   { label: 'Verde claro', value: '#e6f3e2' }, { label: 'Amarelo claro', value: '#fff3cd' },
 ];
 
-const layoutChoices = [
-  { value: 'stack', label: 'Uma embaixo da outra', Icon: LayoutList },
-  { value: 'grid-2', label: 'Duas lado a lado', Icon: LayoutGrid },
-  { value: 'grid-3', label: 'Três lado a lado', Icon: Grid },
-] as const;
-
 export default function Inspector(props: Props) {
   const { block } = props;
   const index = props.blocks.findIndex((item) => item.id === block.id);
   const fields = definitionFor(block.type).fields;
   const updateContent = (key: string, value: string) => props.onUpdate(block.id, { content: { ...block.content, [key]: value } });
-  const mainKeys: Partial<Record<Block['type'], string[]>> = {
-    heading: ['text'], text: ['text'], image: ['src'], button: ['label', 'url'],
-    hero: ['title', 'text', 'image'], navbar: ['brand'], footer: ['brand', 'text'],
-  };
-  const main = fields.filter((field) => mainKeys[block.type]?.includes(field.key) ?? true);
-  const extra = fields.filter((field) => !main.includes(field));
+  const updateStyle = (style: Partial<Block['style']>) => props.onUpdate(block.id, { style: { ...block.style, ...style } });
+  const updatePosition = (position: Partial<Block['position']>) => props.onUpdate(block.id, { position: { ...block.position, ...position } });
 
   function renderField(field: Field) {
     if (field.type === 'image') return <PicturePicker key={field.key} value={block.content[field.key]} onToast={props.onToast} onChange={(src, alt) => {
@@ -80,10 +70,9 @@ export default function Inspector(props: Props) {
     }
     let label = field.label;
     if (field.key === 'text' && block.type === 'heading') label = 'Escreva seu título';
-    else if (field.key === 'text') label = 'O que você quer contar?';
-    else if (field.key === 'label' || field.key === 'buttonLabel') label = 'O que vai no botão?';
-    else if (field.key === 'title') label = 'Escreva seu título';
-    const large = field.type === 'textarea' || field.key === 'text';
+    else if (field.key === 'text') label = 'O que você quer escrever?';
+    else if (field.key === 'label') label = 'Texto do botão';
+    const large = field.type === 'textarea';
     return <label className="kid-field" key={field.key}>{label}{large ?
       <textarea aria-label={label} rows={block.type === 'heading' ? 3 : 5} value={block.content[field.key] || ''} onChange={(e) => updateContent(field.key, e.target.value)} /> :
       <input aria-label={label} value={block.content[field.key] || ''} onChange={(e) => updateContent(field.key, e.target.value)} />}
@@ -92,12 +81,20 @@ export default function Inspector(props: Props) {
 
   return <div className="kid-inspector">
     <button className="kid-back" onClick={props.onDone}><ArrowLeft size={19} />Voltar às peças</button>
-    <div className="kid-panel-title"><span className="step-badge"><BlockIcon type={block.type} size={22} /></span><div><h2>Vamos mudar {block.type === 'image' ? 'a imagem' : `o ${partName(block.type).toLowerCase()}`}?</h2><p>Você muda aqui e vê ao lado.</p></div></div>
-    <div className="kid-edit-fields">{main.map(renderField)}</div>
-    {!!extra.length && <details className="kid-details"><summary>Mais opções desta peça</summary>{extra.map(renderField)}</details>}
-    <fieldset className="kid-backgrounds"><legend>Cor desta parte</legend><div>{colorChoices.map(({ label, value }) => <button key={label} title={label} aria-label={`Fundo: ${label}`} aria-pressed={block.style.background === value} className={block.style.background === value ? 'chosen' : ''} style={{ background: value || '#f7f7fa' }} onClick={() => props.onUpdate(block.id, { style: { ...block.style, background: value, color: value ? '#34304a' : '' } })}>{block.style.background === value ? <Check size={20} /> : !value ? '↺' : ''}</button>)}</div></fieldset>
-    <fieldset className="kid-layouts"><legend>Como organizar?</legend><div>{layoutChoices.map(({ value, label, Icon }) => <button key={value} title={label} aria-label={label} aria-pressed={block.style.layout === value} className={block.style.layout === value ? 'chosen' : ''} onClick={() => props.onUpdate(block.id, { style: { ...block.style, layout: value } })}><Icon size={20} /><span>{label}</span>{block.style.layout === value && <Check size={18} />}</button>)}</div></fieldset>
+    <div className="kid-panel-title"><span className="step-badge"><BlockIcon type={block.type} size={22} /></span><div><h2>Vamos mudar {partName(block.type).toLowerCase()}?</h2><p>Você muda aqui e vê ao lado.</p></div></div>
+    <div className="kid-edit-fields">{fields.map(renderField)}</div>
+    <fieldset className="kid-backgrounds"><legend>Cor de fundo</legend><div>{colorChoices.map(({ label, value }) => <button key={label} title={label} aria-label={`Fundo: ${label}`} aria-pressed={block.style.background === value} className={block.style.background === value ? 'chosen' : ''} style={{ background: value || '#f7f7fa' }} onClick={() => updateStyle({ background: value, color: value ? '#34304a' : '' })}>{block.style.background === value ? <Check size={20} /> : !value ? '↺' : ''}</button>)}</div></fieldset>
+    <fieldset className="kid-size"><legend>Tamanho da fonte</legend><div className="kid-size-row"><label className="kid-field"><Minus size={18} />Menor<input type="range" min="12" max="72" value={block.style.fontSize || 16} onChange={(e) => updateStyle({ fontSize: Number(e.target.value) })} /><Plus size={18} />Maior</label></div></fieldset>
+    <fieldset className="kid-weight"><legend>Espessura</legend><div className="kid-weight-row">
+      {['400', '500', '600', '700'].map((w) => <button key={w} className={block.style.fontWeight === w ? 'chosen' : ''} onClick={() => updateStyle({ fontWeight: w })}>{w}</button>)}
+    </div></fieldset>
+    <fieldset className="kid-position"><legend>Posição e tamanho</legend><div className="kid-pos-grid">
+      <label className="kid-field">X<input type="number" min="0" step="1" value={block.position.x} onChange={(e) => updatePosition({ x: Number(e.target.value) })} /></label>
+      <label className="kid-field">Y<input type="number" min="0" step="1" value={block.position.y} onChange={(e) => updatePosition({ y: Number(e.target.value) })} /></label>
+      <label className="kid-field">Largura<input type="number" min="40" step="1" value={block.position.width} onChange={(e) => updatePosition({ width: Number(e.target.value) })} /></label>
+      <label className="kid-field">Altura<input type="number" min="30" step="1" value={block.position.height} onChange={(e) => updatePosition({ height: Number(e.target.value) })} /></label>
+    </div></fieldset>
     <button className="kid-button kid-done" onClick={props.onDone}><Check size={21} />Pronto!</button>
-    <details className="kid-details kid-organize"><summary>Mover, copiar ou apagar</summary><div className="kid-move-buttons"><button className="kid-button" disabled={!index} onClick={() => props.onMove(block.id, -1)}><ArrowUp size={18} />Subir</button><button className="kid-button" disabled={index === props.blocks.length - 1} onClick={() => props.onMove(block.id, 1)}><ArrowDown size={18} />Descer</button></div><button className="kid-button" onClick={() => props.onDuplicate(block.id)}><Copy size={18} />Fazer uma cópia</button><button className="kid-button kid-remove" onClick={() => props.onDelete(block.id)}><Trash2 size={18} />Apagar esta peça</button></details>
+    <details className="kid-details kid-organize"><summary>Mover, copiar ou apagar</summary><div className="kid-move-buttons"><button className="kid-button" disabled={!index} onClick={() => props.onMove(block.id, 0, -20)}><Plus size={18} />Subir</button><button className="kid-button" onClick={() => props.onMove(block.id, 0, 20)}><Minus size={18} />Descer</button></div><button className="kid-button" onClick={() => props.onDuplicate(block.id)}><Copy size={18} />Copiar</button><button className="kid-button kid-remove" onClick={() => props.onDelete(block.id)}><Trash2 size={18} />Apagar</button></details>
   </div>;
 }

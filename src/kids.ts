@@ -32,11 +32,12 @@ export const hueStops = [
 ];
 
 export const simpleBlocks = [
-  { type: 'heading', label: 'Título', hint: 'Letras bem grandes', color: 'purple' },
-  { type: 'text', label: 'Texto', hint: 'Conte uma história', color: 'blue' },
-  { type: 'image', label: 'Imagem', hint: 'Uma foto ou desenho', color: 'peach' },
-  { type: 'button', label: 'Botão', hint: 'Um lugar para clicar', color: 'green' },
-  { type: 'container', label: 'Linha', hint: 'Peças lado a lado', color: 'mint' },
+  { type: 'heading', label: 'Título', hint: 'Letras grandes', color: 'purple' },
+  { type: 'text', label: 'Texto', hint: 'Parágrafos', color: 'blue' },
+  { type: 'image', label: 'Imagem', hint: 'Fotos e desenhos', color: 'peach' },
+  { type: 'button', label: 'Botão', hint: 'Link clicável', color: 'green' },
+  { type: 'divider', label: 'Linha', hint: 'Divisor visual', color: 'gray' },
+  { type: 'spacer', label: 'Espaço', hint: 'Respiro entre peças', color: 'mint' },
 ] as const;
 
 export const partName = (type: BlockType) => ({ heading: 'Título', text: 'Texto', image: 'Imagem', button: 'Botão', hero: 'Capa', navbar: 'Menu', features: 'Cartões', gallery: 'Imagens', faq: 'Perguntas', divider: 'Linha', spacer: 'Espaço', footer: 'Final da página', container: 'Linha' })[type];
@@ -48,11 +49,8 @@ export function createKidBlock(type: BlockType): Block {
   if (type === 'text') block.content = { title: '', text: 'Escreva aqui a sua ideia!' };
   if (type === 'image') block.content = { src: pictures[0].src, alt: pictures[0].alt, caption: '' };
   if (type === 'button') block.content = { label: 'Clique aqui!', url: '#' };
-  if (type === 'container') block.content = { title: '', layout: 'grid-2' };
   block.style.padding = 24;
   block.style.align = 'center';
-  block.style.layout = 'stack';
-  block.style.gap = 12;
   return block;
 }
 
@@ -76,7 +74,7 @@ export function createKidProject(starter: Starter = 'rainbow'): Project {
     blocks[2].content = { title: 'Minhas ideias', text: template.text };
   }
   const { primary, background, text } = template.palette;
-  const theme: Theme = { primary, background, text, font: 'modern', radius: 20, layout: 'stack', gap: 16 };
+  const theme: Theme = { primary, background, text, font: 'modern', radius: 20 };
   return { version: 1, name: starter === 'blank' ? 'Meu novo site' : template.name, description: 'Um site criado com imaginação no Ateliê.', blocks, theme };
 }
 
