@@ -1,0 +1,257 @@
+/* Interface de criação: uma peça por vez, com alvos grandes para clicar. */
+.kid-app { color: #34304a; --purple: #7055bb; --purple-dark: #59419b; }
+.kid-header { display: flex; align-items: center; gap: 28px; min-height: 94px; padding: 16px 28px; background: #fff; border-bottom: 1px solid #e9e5f1; flex-shrink: 0; }
+.kid-header .brand { gap: 11px; flex-shrink: 0; }
+.kid-header .brand-symbol { width: 43px; height: 43px; border-radius: 14px; }
+.kid-header .brand > span:nth-child(2) { font-size: 31px; }
+.kid-project-name { display: flex; flex-direction: column; gap: 3px; min-width: 100px; max-width: 270px; flex: 1; }
+.kid-project-name > span { color: #7b7189; font-size: 12px; }
+.kid-project-name input { width: 100%; padding: 5px 6px; margin-left: -6px; border: 1px solid transparent; background: transparent; border-radius: 7px; font-size: 17px; font-weight: 650; color: #42344f; }
+.kid-project-name input:hover { border-color: #e3dcec; }
+.kid-project-name input:focus { outline: 2px solid #c4b5e4; background: #fcfaff; }
+.kid-header-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.kid-button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 12px 17px; min-height: 46px; border: 1px solid #e0d8eb; border-radius: 11px; background: #fff; color: #625173; font-size: 14px; font-weight: 600; line-height: 1.35; text-decoration: none; }
+.kid-button:hover:not(:disabled) { border-color: #b7a3d5; background: #f8f4fd; }
+.kid-button:disabled { opacity: .4; }
+.kid-primary { color: #fff; background: #7055bb; border-color: #7055bb; box-shadow: 0 3px 0 #523a9720; }
+.kid-primary:hover:not(:disabled) { background: #5e43a6; color: #fff; border-color: #5e43a6; }
+.kid-undo { border-color: transparent; background: transparent; color: #766683; }
+.kid-redo { padding-inline: 11px; }
+.kid-redo span { font-size: 12px; }
+.kid-save { background: #f8f5fc; }
+.kid-journey { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 13px 30px; background: #faf8fe; border-bottom: 1px solid #e8e2f1; min-height: 62px; flex-shrink: 0; }
+.kid-steps { display: flex; align-items: center; gap: 17px; font-size: 13px; color: #8a7c99; }
+.kid-steps > span { display: flex; align-items: center; gap: 9px; }
+.kid-steps b { width: 27px; height: 27px; border-radius: 50%; background: #eee8f6; color: #8d77a8; display: grid; place-items: center; font-size: 12px; }
+.kid-steps i { font-style: normal; color: #c0b3d0; }
+.kid-steps .current { color: #64439a; font-weight: 600; }
+.kid-steps .current b { color: #fff; background: #9373c2; }
+.kid-save-status { display: inline-flex; align-items: center; gap: 7px; color: #708465; font-size: 12px; white-space: nowrap; }
+.kid-save-status.error { color: #a0651c; }
+.kid-panel { display: flex; flex-direction: column; width: 306px; flex-shrink: 0; overflow-y: auto; padding: 26px 22px 20px; border-right: 1px solid #e7e2ef; background: #fff; z-index: 8; }
+.kid-toolbox, .kid-inspector { display: flex; flex-direction: column; }
+.kid-panel-title { display: flex; align-items: flex-start; gap: 11px; margin-bottom: 23px; }
+.step-badge { display: grid; place-items: center; width: 35px; height: 35px; flex-shrink: 0; border-radius: 12px; background: #f1ebfb; color: #8a67b6; font-size: 16px; font-weight: 700; }
+.kid-panel-title h2 { font-size: 17px; font-weight: 700; letter-spacing: -.35px; line-height: 1.35; padding-top: 1px; }
+.kid-panel-title p { margin-top: 6px; color: #8b7c98; font-size: 12px; line-height: 1.65; }
+.kid-blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.kid-add-card { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; padding: 15px 12px 14px; border: 2px solid transparent; border-radius: 14px; min-height: 138px; text-align: left; cursor: grab; }
+.kid-add-card:active { cursor: grabbing; }
+.kid-add-card:hover { border-color: currentColor; }
+.kid-purple { background: #f0eafa; color: #7953ac; }
+.kid-blue { background: #e9f3fc; color: #417aa9; }
+.kid-peach { background: #fff0e5; color: #b97943; }
+.kid-green { background: #edf5e9; color: #658b49; }
+.kid-mint { background: #e8faf0; color: #3a9c6d; }
+.kid-card-icon { display: flex; align-items: center; justify-content: center; height: 43px; width: 43px; border-radius: 11px; background: #ffffff85; margin-bottom: 7px; }
+.kid-add-card strong { font-size: 17px; font-weight: 700; }
+.kid-add-card > span:last-of-type { font-size: 11px; font-weight: 500; line-height: 1.5; }
+.kid-card-plus { position: absolute; top: 14px; right: 10px; opacity: .65; }
+.kid-colors { margin-top: 29px; }
+.kid-colors h3 { font-size: 14px; font-weight: 600; margin-bottom: 15px; }
+.kid-palette-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.kid-palette-list button { border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0; color: #7b698b; font-size: 11px; font-weight: 500; min-height: 69px; }
+.kid-palette-list button > span { position: relative; width: 49px; height: 45px; border: 2px solid transparent; border-radius: 12px; display: grid; place-items: center; }
+.kid-palette-list button.chosen > span { border-color: currentColor; }
+.kid-palette-list button:hover > span { outline: 2px solid #e4d9ef; outline-offset: 2px; }
+.kid-palette-list i { width: 21px; height: 21px; border-radius: 50%; }
+.kid-palette-list svg { position: absolute; right: -5px; bottom: -5px; background: #fff; border-radius: 50%; padding: 2px; width: 21px; height: 21px; box-shadow: 0 1px 4px #47385415; }
+.kid-tip { display: flex; gap: 12px; padding: 17px 13px; background: #fffbef; border: 1px solid #f5ecd5; border-radius: 12px; margin-top: 27px; color: #a48643; }
+.kid-tip p { font-size: 12px; line-height: 1.85; color: #9b8257; }
+.kid-tip strong { font-weight: 600; color: #866a40; }
+.kid-toolbox-footer { display: flex; flex-direction: column; gap: 2px; margin-top: 25px; }
+.kid-toolbox-footer button, .kid-file-actions button { display: flex; align-items: center; gap: 9px; border: 0; background: transparent; border-radius: 8px; min-height: 44px; padding: 8px 5px; color: #8d789d; text-align: left; font-size: 12px; }
+.kid-toolbox-footer button:hover, .kid-file-actions button:hover { background: #f5f0fa; color: #765397; }
+.kid-file-actions { display: flex; flex-wrap: wrap; gap: 5px; justify-content: space-between; border-top: 1px solid #eee7f4; padding-top: 9px; margin-top: 10px; }
+.kid-file-actions button { gap: 5px; font-size: 11px; }
+.kid-back { display: flex; align-items: center; gap: 8px; border: 0; background: transparent; color: #9674b1; font-size: 13px; text-align: left; padding: 0 0 16px; min-height: 44px; margin-bottom: 10px; }
+.kid-back:hover { color: #624385; }
+.kid-inspector .kid-panel-title { margin-bottom: 22px; }
+.kid-inspector .kid-panel-title h2 { font-size: 17px; }
+.kid-field { display: flex; flex-direction: column; gap: 9px; font-size: 13px; font-weight: 600; color: #786187; margin-bottom: 19px; }
+.kid-field input, .kid-field textarea, .kid-field select { width: 100%; min-width: 0; padding: 12px; border: 1.5px solid #e4d9ed; border-radius: 10px; background: #fefcff; color: #52415f; font-size: 16px; font-weight: 400; line-height: 1.65; }
+.kid-field select { font-size: 13px; cursor: pointer; }
+.kid-field textarea { resize: vertical; min-height: 115px; max-height: 330px; }
+.kid-field input:focus, .kid-field textarea:focus, .kid-field select:focus { outline: 3px solid #ede3f7; border-color: #a88ac7; }
+.kid-field input::placeholder { color: #a891b6; }
+.kid-details { border-top: 1px solid #eee5f4; margin-top: 6px; padding: 4px 0; }
+.kid-details summary { color: #97809f; font-size: 12px; font-weight: 500; cursor: pointer; padding: 14px 0; min-height: 44px; }
+.kid-details[open] summary { color: #785486; margin-bottom: 9px; }
+.kid-details > .kid-field { margin-top: 10px; }
+.kid-backgrounds { padding: 0; border: 0; margin: 21px 0 24px; }
+.kid-backgrounds legend { padding: 0; font-size: 13px; font-weight: 600; color: #786187; margin-bottom: 12px; }
+.kid-backgrounds > div { display: flex; gap: 5px; }
+.kid-backgrounds button { display: grid; place-items: center; width: 39px; height: 42px; border: 1.5px solid #e7dfee; border-radius: 10px; color: #987bac; font-size: 24px; }
+.kid-backgrounds button.chosen { border-color: #9c7bbb; box-shadow: 0 0 0 2px #ece3f4; }
+.kid-layouts { padding: 0; border: 0; margin: 21px 0 24px; }
+.kid-layouts legend { padding: 0; font-size: 13px; font-weight: 600; color: #786187; margin-bottom: 12px; }
+.kid-layouts > div { display: flex; gap: 6px; }
+.kid-layouts button { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 8px; border: 1.5px solid #e7dfee; border-radius: 10px; background: #fff; color: #8a6ca8; font-size: 11px; min-width: 75px; min-height: 60px; }
+.kid-layouts button.chosen { border-color: #9c7bbb; background: #f5eefa; box-shadow: 0 0 0 2px #ece3f4; }
+.kid-layouts button svg { color: #a485b8; }
+.kid-layouts button.chosen svg { color: #7c5aa0; }
+.kid-done { width: 100%; color: #fff; background: #739560; border-color: #739560; min-height: 51px; font-size: 17px; }
+.kid-done:hover:not(:disabled) { color: #fff; background: #60804e; border-color: #60804e; }
+.kid-organize { margin-top: 24px; }
+.kid-organize > .kid-button { width: 100%; margin-top: 9px; font-size: 13px; }
+.kid-move-buttons { display: flex; gap: 8px; }
+.kid-move-buttons button { flex: 1; padding-inline: 10px; }
+.kid-remove { color: #aa6176; border-color: #eed6df; background: #fff8fa; }
+.kid-image-preview { height: 134px; border: 1px solid #e9dfee; border-radius: 12px; display: grid; place-items: center; overflow: hidden; background: #faf5fd; color: #b9a2cc; }
+.kid-image-preview img { width: 100%; height: 100%; object-fit: contain; }
+.kid-upload { width: 100%; margin-top: 12px; font-size: 14px; background: #f7f1fc; color: #8c62a7; }
+.kid-picture-picker > p { font-size: 12px; color: #9b7fae; margin: 19px 0 11px; }
+.kid-picture-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-bottom: 17px; }
+.kid-picture-options button { padding: 3px 3px 8px; border: 2px solid #eee4f5; background: #fff; border-radius: 9px; color: #9374a6; font-size: 10px; }
+.kid-picture-options button.chosen, .kid-picture-options button:hover { border-color: #b191cc; background: #fcf8ff; }
+.kid-picture-options img { width: 100%; height: 43px; object-fit: cover; border-radius: 5px; margin-bottom: 6px; }
+.kid-canvas { background-color: #f7f5fa; background-image: radial-gradient(#dcd4e7 .8px, transparent .8px); background-size: 18px 18px; }
+.kid-canvas .canvas-topline { height: 59px; font-size: 12px; padding-inline: 34px; }
+.kid-canvas .canvas-topline > span:first-child { color: #90769f; gap: 9px; font-size: 13px; }
+.kid-canvas .canvas-topline > span:last-child { color: #a58bb4; }
+.kid-canvas .canvas-scroll { padding-top: 4px; }
+.kid-canvas .canvas-frame { border-radius: 15px 15px 6px 6px; box-shadow: 0 6px 25px #49365708; }
+.kid-canvas .canvas-browser { height: 43px; border-radius: 15px 15px 0 0; padding-inline: 19px; }
+.kid-canvas .browser-address { font-family: 'DM Sans Variable', sans-serif; font-size: 12px; color: #9b83ab; }
+.kid-canvas .browser-dots { gap: 6px; }
+.kid-canvas .browser-dots i { width: 8px; height: 8px; }
+.kid-canvas .editor-page { min-height: 570px; }
+.kid-canvas .editor-block { scroll-margin-top: 35px; }
+.kid-canvas .editor-block::after { border-width: 3px; }
+.kid-canvas .editor-block-tools { height: 42px; top: 0; left: 12px; padding: 0 5px; gap: 3px; font-size: 13px; border-radius: 9px; background: #9575ba; }
+.kid-canvas .editor-block-tools > button { width: auto; min-width: 34px; height: 36px; gap: 4px; padding: 0 6px; font-size: 11px; }
+.kid-canvas .editor-block-tools > span { padding: 0 10px 0 2px; }
+.kid-canvas .editor-block .block-hover-label { align-items: center; gap: 6px; top: 8px; right: 10px; left: auto; transform: none; background: #a88cc2; padding: 5px 9px; border-radius: 6px; font-size: 11px; }
+.kid-canvas .editor-block:hover:not(.is-selected) > .block-hover-label { display: flex; }
+.kid-canvas .canvas-add-block { padding: 24px; border-top-color: #e4d7ef; }
+.kid-canvas .canvas-add-block button { min-height: 49px; padding: 12px 23px; border-radius: 11px; font-size: 14px; color: #9a76b6; gap: 10px; }
+.kid-canvas .canvas-bottom-note { margin: 21px 0 2px; font-size: 12px; gap: 8px; color: #ad91be; }
+.kid-app .toast { font-size: 14px; padding: 13px 16px; border-radius: 13px; color: #866395; line-height: 1.65; }
+.kid-app .toast > .icon-button { min-height: 36px; min-width: 36px; }
+.kid-app .empty-canvas { min-height: 390px; }
+.kid-mobile-pieces, .kid-panel-close, .kid-panel-shade { display: none; }
+
+/* Les fenêtres gardent les mêmes grandes cibles que l'éditeur. */
+.kid-modal { border-radius: 19px; color: #786087; }
+.kid-modal .modal-close { width: 44px; height: 44px; top: 10px; right: 10px; }
+.kid-modal h2 { color: #6a4b7d; font-size: 26px; padding-right: 13px; }
+.kid-modal > p { font-size: 14px; line-height: 1.8; color: #947ba5; }
+.kid-modal .modal-heading p { font-size: 13px; }
+.kid-modal .eyebrow-label { font-size: 10px; }
+.kid-modal .modal-heading { padding-right: 56px; }
+.kid-modal .code-tabs button { font-size: 13px; }
+.kid-modal .code-description { font-size: 12px; }
+.kid-modal .code-toolbar { min-height: 52px; }
+.kid-modal .code-toolbar .icon-button { min-width: 44px; min-height: 44px; }
+.kid-modal .code-view { font-size: 12px; }
+.kid-modal .code-footer { font-size: 11px; }
+.kid-modal.export-modal { width: 590px; }
+.kid-modal .export-hero > p { font-size: 14px; }
+.kid-modal .export-download { min-height: 50px; font-size: 15px; }
+.kid-modal .export-files strong { font-size: 13px; }
+.kid-modal .export-files > div > span:last-child, .kid-modal .export-caption { font-size: 11px; }
+.kid-modal .publish-guide h3 { font-size: 15px; }
+.kid-modal .publish-guide p { font-size: 13px; }
+.kid-modal .export-project-note p { font-size: 12px; }
+.kid-modal.preview-modal > .modal-close { display: none; }
+.kid-modal .preview-toolbar { min-height: 78px; padding: 13px 22px; gap: 15px; }
+.kid-modal .preview-toolbar > strong { font-size: 16px; color: #8c6ba0; }
+.kid-modal .device-controls button { display: flex; align-items: center; justify-content: center; gap: 7px; width: auto; height: 44px; padding: 8px 12px; font-size: 12px; }
+.kid-modal .preview-footer { min-height: 44px; font-size: 12px; }
+.kid-modal .help-topics { gap: 27px; }
+.kid-modal .help-topics > div > span { height: 45px; width: 45px; }
+.kid-modal .help-topics h3 { font-size: 17px; line-height: 1.5; }
+.kid-modal .help-topics p { font-size: 15px; }
+.kid-modal .kid-help-tip { padding: 14px 17px; border-radius: 10px; background: #fffaed; color: #9d8051; font-size: 14px; margin-bottom: 22px; }
+.kid-modal.help-modal > .kid-button { width: 100%; }
+.kid-starters { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+.kid-starters button { display: flex; align-items: center; gap: 17px; padding: 8px 15px 8px 8px; min-height: 93px; background: #fcf9ff; border: 2px solid #eee4f6; border-radius: 13px; color: #9470ad; text-align: left; }
+.kid-starters button:hover { border-color: #b69acb; background: #f7f0fd; }
+.kid-starters img { width: 135px; height: 76px; object-fit: cover; border-radius: 7px; }
+.kid-starters strong { flex: 1; font-size: 16px; font-weight: 600; }
+.kid-blank { width: 100%; margin-top: 17px; border-style: dashed; }
+.kid-modal .kid-new-note { font-size: 12px; color: #ab92bc; margin-top: 18px; }
+.teacher-modal { width: 610px; padding: 32px; }
+.teacher-modal > .modal-icon { margin-bottom: 23px; }
+.teacher-modal > p { margin-top: 12px; }
+.kid-teacher-actions { display: grid; gap: 10px; margin-top: 25px; }
+.kid-teacher-actions button { display: flex; align-items: center; gap: 14px; min-height: 81px; padding: 15px; border: 1px solid #eaddf3; border-radius: 11px; background: #fcf8ff; text-align: left; color: #a382ba; }
+.kid-teacher-actions button:hover { border-color: #b494cd; background: #f6edfd; }
+.kid-teacher-actions button > span { flex: 1; }
+.kid-teacher-actions strong { display: block; font-size: 15px; font-weight: 600; color: #8a62a3; }
+.kid-teacher-actions small { display: block; font-size: 12px; line-height: 1.7; margin-top: 4px; color: #a185b3; }
+.kid-modal .kid-teacher-note { background: #f8f3fc; border-radius: 9px; padding: 14px; font-size: 12px; margin-top: 20px; color: #94769f; }
+
+@media (max-width: 1150px) {
+  .kid-header { gap: 21px; padding-inline: 22px; }
+  .kid-project-name { max-width: 220px; }
+  .kid-header-actions { gap: 6px; }
+  .kid-header-actions .kid-button { padding-inline: 12px; }
+  .kid-redo span { display: none; }
+  .kid-panel { width: 288px; padding-inline: 18px; }
+  .kid-journey { padding-inline: 22px; }
+  .kid-steps { font-size: 12px; gap: 10px; }
+  .kid-save-status { font-size: 11px; }
+  .kid-canvas .canvas-topline > span:last-child { display: none; }
+}
+@media (max-width: 900px) {
+  .kid-header { flex-wrap: wrap; gap: 12px 22px; padding-block: 14px; }
+  .kid-header .brand { flex: 1; }
+  .kid-project-name { max-width: 250px; }
+  .kid-header-actions { width: 100%; justify-content: flex-end; }
+  .kid-header-actions .kid-undo { margin-right: auto; }
+  .kid-header-actions .kid-redo span { display: inline; }
+  .kid-save-status { display: none; }
+  .kid-canvas .canvas-topline { height: 50px; padding-inline: 24px; }
+}
+@media (max-width: 760px) {
+  .kid-header { padding: 13px 16px; gap: 12px 15px; }
+  .kid-header .brand-symbol { width: 35px; height: 35px; border-radius: 10px; }
+  .kid-header .brand > span:nth-child(2) { font-size: 27px; }
+  .kid-project-name { max-width: 190px; }
+  .kid-project-name input { font-size: 15px; }
+  .kid-project-name > span { font-size: 10px; }
+  .kid-header-actions .kid-button { font-size: 13px; padding: 10px 12px; min-height: 44px; }
+  .kid-header-actions .kid-redo { padding-inline: 10px; }
+  .kid-header-actions .kid-redo span { display: none; }
+  .kid-journey { min-height: 61px; padding: 8px 14px; gap: 10px; }
+  .kid-mobile-pieces { display: flex; padding: 10px 13px; font-size: 13px; }
+  .kid-steps { font-size: 12px; }
+  .kid-steps > i, .kid-steps > span:not(.current) { display: none; }
+  .kid-steps b { width: 23px; height: 23px; font-size: 10px; }
+  .kid-panel { display: none; }
+  .kid-panel-open .kid-panel { display: flex; position: absolute; top: 0; left: 0; bottom: 0; width: min(330px, calc(100vw - 28px)); padding: 14px 22px 24px; z-index: 20; box-shadow: 8px 0 30px #3e235624; }
+  .kid-panel-close { display: flex; align-self: flex-end; margin: 0 0 17px; min-height: 44px; padding: 9px 12px; font-size: 12px; }
+  .kid-panel-shade { display: block; position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #33253d3b; z-index: 19; }
+  .kid-canvas .canvas-topline { height: 47px; padding-inline: 16px; font-size: 12px; }
+  .kid-canvas .canvas-topline > span:first-child { font-size: 12px; }
+  .kid-canvas .canvas-browser { padding-inline: 12px; }
+  .kid-canvas .browser-address { font-size: 11px; }
+  .kid-canvas .canvas-add-block { padding: 19px 12px; }
+  .kid-canvas .canvas-add-block button { font-size: 13px; }
+  .kid-canvas .editor-block-tools { max-width: calc(100% - 24px); }
+  .kid-canvas .editor-block-tools > span { font-size: 11px; padding-right: 5px; }
+  .kid-canvas .editor-block-tools > button { font-size: 10px; }
+  .kid-canvas .canvas-bottom-note { font-size: 11px; }
+  .kid-app .toast { font-size: 12px; padding: 10px 12px; }
+  .kid-modal .preview-toolbar { flex-wrap: wrap; min-height: 76px; height: auto; padding: 12px; gap: 8px; }
+  .kid-modal .preview-toolbar > strong { display: none; }
+  .kid-modal .preview-toolbar .kid-button { font-size: 12px; padding: 10px 12px; }
+  .kid-modal .device-controls button { font-size: 10px; padding: 6px 8px; }
+  .kid-modal .device-controls button > span { display: none; }
+  .kid-modal .preview-footer { font-size: 11px; }
+  .kid-modal h2 { font-size: 24px; }
+  .teacher-modal { padding: 27px 23px; }
+  .kid-starters img { width: 98px; height: 65px; }
+  .kid-starters strong { font-size: 14px; }
+  .kid-modal .code-tabs button { font-size: 11px; padding-inline: 8px; }
+  .kid-modal .code-toolbar { padding-inline: 7px; }
+  .kid-modal .code-toolbar .icon-button { min-width: 36px; }
+  .kid-modal .code-description { font-size: 11px; }
+}
+@media (max-width: 390px) {
+  .kid-header-actions .kid-button { padding-inline: 9px; font-size: 12px; gap: 6px; }
+  .kid-project-name { max-width: 167px; }
+  .kid-steps { font-size: 11px; }
+  .kid-header-actions .kid-redo { padding-inline: 6px; }
+}
